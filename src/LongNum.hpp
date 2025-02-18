@@ -42,7 +42,7 @@ public:
  
     friend LongNum operator+(const LongNum& lnum,const LongNum& rnum);
     friend LongNum operator-(const LongNum& lnum,const LongNum& rnum);
-    friend LongNum operator*(const LongNum& lnum,const LongNum& rnum);
+    friend LongNum operator*(const Lon  1`gNum& lnum,const LongNum& rnum);
     friend LongNum operator/(const LongNum& lnum,const LongNum& rnum) ;
  
  
