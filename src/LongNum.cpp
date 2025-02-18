@@ -256,6 +256,11 @@ LongNum operator+(const LongNum& lnum,const LongNum& rnum) {
 }
 
 LongNum operator-(const LongNum &lnum,const LongNum &rnum) {
+    if (lnum.isNegative != rnum.isNegative) {
+        LongNum temp = rnum;
+        temp.isNegative = !temp.isNegative;
+        return lnum - temp;
+    }
     uint32_t maxPrecision = std::max(lnum.precision, rnum.precision);
     LongNum result(maxPrecision);
     int l_fractionDigits = lnum.getFractionDigits();
