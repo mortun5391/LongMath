@@ -1,7 +1,3 @@
-//
-// Created by 05 on 02.02.2025.
-//
-
 #ifndef LONGNUM_H
 #define LONGNUM_H
 #include <compare>
@@ -10,7 +6,7 @@
 #include <algorithm>
 #include <cstdint>
 
-// 
+
 class LongNum {
 private:
     std::vector<uint32_t> digits;
@@ -44,7 +40,6 @@ public:
     LongNum& operator*=(const LongNum& other);
     LongNum& operator/=(const LongNum& other);
  
-     // Арифметические операторы
     friend LongNum operator+(const LongNum& lnum,const LongNum& rnum);
     friend LongNum operator-(const LongNum& lnum,const LongNum& rnum);
     friend LongNum operator*(const LongNum& lnum,const LongNum& rnum);

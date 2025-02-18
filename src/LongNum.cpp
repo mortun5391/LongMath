@@ -9,10 +9,13 @@
 constexpr unsigned BASE = 32;
 constexpr unsigned DEFAULT_PRECISION = 64;
 
+// ****** Constructors and destructors ******
+
 LongNum::LongNum(uint32_t precision) :  precision(precision) {
     initializeFraction();
     digits.push_back(0);
 }
+
 LongNum::LongNum(unsigned long long number) {
     if (number == 0) {
         return;
@@ -64,6 +67,74 @@ LongNum::LongNum(const LongNum& other) :
 
 LongNum::~LongNum() {}
 
+// Private methods
+
+
+void LongNum::initializeFraction(void) {
+    uint32_t fractionDigits = 0;
+    while (32 * fractionDigits < precision) {
+        digits.push_back(0);
+        fractionDigits++;
+    }
+}
+
+void LongNum::printDigits() {
+    for (size_t i = 0; i < digits.size(); i++) {
+        std::cout << digits[i] << " ";
+    }
+    std::cout << std::endl;
+}
+void LongNum::printBinaryDigits() {
+    for (int i = digits.size() - 1; i >= 0; i--) {
+        std::bitset<BASE> bits(digits[i]);  // 32 бита для uint32_t
+        std::string binary_string = bits.to_string();
+        std::cout << binary_string << " ";
+
+    }
+    std::cout << std::endl;
+}
+
+
+uint32_t LongNum::getFractionDigits() const {
+    return (precision/BASE) + (precision % BASE != 0);
+}
+
+void LongNum::removeLeadingZeros() {
+    while (digits.size() > getFractionDigits() && digits.back() == 0) {
+        digits.pop_back();
+    }
+}
+
+// Precision
+
+void LongNum::setPrecision(uint32_t newPrecision) {
+    uint32_t newFractionDigits = newPrecision/32 + (newPrecision % 32 != 0);
+    uint32_t fractionDigits = getFractionDigits();
+    precision = newPrecision;
+    if (newFractionDigits == fractionDigits) {
+        return;
+    }
+    int diff = newFractionDigits - fractionDigits;
+    if (diff > 0) {
+        digits.insert(digits.begin(), diff,0);
+    }
+    else{
+        digits.erase(digits.begin(), digits.begin() - diff);
+    }
+}
+
+
+uint32_t LongNum::getPrecision() const {
+    return precision;
+}
+
+LongNum LongNum::withPrecision(uint32_t precision) {
+    LongNum result(*this);
+    result.setPrecision(precision);
+    return result;
+}
+
+// Operators
 LongNum& LongNum::operator=(const LongNum& other) {
     if (this != &other) {
         digits = other.digits;
@@ -103,45 +174,49 @@ LongNum & LongNum::operator/=(const LongNum &other) {
     return *this;
 }
 
-
-
-
-void LongNum::initializeFraction(void) {
-    uint32_t fractionDigits = 0;
-    while (32 * fractionDigits < precision) {
-        digits.push_back(0);
-        fractionDigits++;
+LongNum operator<<(const LongNum &number, unsigned shift) {
+    LongNum result(number);
+    uint32_t newDigits = shift / 32;
+    if (newDigits) {
+        result.digits.insert(result.digits.begin(), newDigits, 0);
     }
-}
-
-void LongNum::printDigits() {
-    for (size_t i = 0; i < digits.size(); i++) {
-        std::cout << digits[i] << " ";
+    shift = shift % 32;
+    if (shift) {
+        uint32_t carry = 0;
+        for (size_t i = newDigits; i < result.digits.size(); i++) {
+            uint32_t newCarry = result.digits[i] >> (32 - shift);
+            result.digits[i] <<= shift;
+            result.digits[i] |= carry;
+            carry = newCarry;
+        }
+        if (carry) {
+            result.digits.push_back(carry);
+        }
     }
-    std::cout << std::endl;
-}
-void LongNum::printBinaryDigits() {
-    for (int i = digits.size() - 1; i >= 0; i--) {
-        std::bitset<BASE> bits(digits[i]);  // 32 бита для uint32_t
-        std::string binary_string = bits.to_string();
-        std::cout << binary_string << " ";
+    return result;
 
+}
+
+LongNum operator>>(const LongNum &number, unsigned shift) {
+    LongNum result(number);
+    uint32_t numDigits = shift / 32;
+    if (numDigits >= result.digits.size()) {
+        return (0.0_longnum).withPrecision(number.precision);
     }
-    std::cout << std::endl;
-}
-
-
-uint32_t LongNum::getFractionDigits() const {
-    return (precision/BASE) + (precision % BASE != 0);
-}
-
-void LongNum::removeLeadingZeros() {
-    while (digits.size() > getFractionDigits() && digits.back() == 0) {
-        digits.pop_back();
+    result.digits.erase(result.digits.begin(), result.digits.begin() + numDigits);
+    shift = shift % 32;
+    if (shift) {
+        uint32_t carry = 0;
+        for (int i = result.digits.size() - 1; i >= 0; i--) {
+            uint32_t newCarry =  result.digits[i] << (32 - shift);
+            result.digits[i] >>= shift;
+            result.digits[i] |= carry;
+            carry = newCarry;
+        }
     }
+    result.removeLeadingZeros();
+    return result;
 }
-
-
 
 LongNum operator+(const LongNum& lnum,const LongNum& rnum) {
     if (lnum.isNegative != rnum.isNegative) {
@@ -257,14 +332,12 @@ LongNum operator*(const LongNum& lnum,const LongNum& rnum) {
     return result;
 }
 
-void div(const LongNum & long_num, const LongNum & r_copy, const LongNum & res);
-
 LongNum operator/(const LongNum& lnum,const LongNum& rnum) {
-    if (rnum == 0.0_longnum) {
+    if (rnum == 0_longnum) {
         throw std::invalid_argument("Division by zero");
     }
-    if (lnum == 0.0_longnum) {
-        return (0.0_longnum).withPrecision(std::max(lnum.precision, rnum.precision));
+    if (lnum == 0_longnum) {
+        return (0_longnum).withPrecision(std::max(lnum.precision, rnum.precision));
     }
     LongNum l_copy(lnum);
     LongNum r_copy(rnum);
@@ -289,9 +362,7 @@ LongNum operator/(const LongNum& lnum,const LongNum& rnum) {
         }
     } else {
 
-        // source: https://skanthak.hier-im-netz.de/division.html
-        // divide a / b as integers (ignoring exp and sign), a >= b, len(b) >= 2
-
+        // https://skanthak.hier-im-netz.de/division.html
 
         const size_t m = l_copy.digits.size(), n = r_copy.digits.size();  // initial sizes
         const unsigned s = std::countl_zero(r_copy.digits.back());
@@ -392,32 +463,6 @@ std::strong_ordering LongNum::absCompare(const LongNum &other) const {
     return std::strong_ordering::equal;
 }
 
-void LongNum::setPrecision(uint32_t newPrecision) {
-    uint32_t newFractionDigits = newPrecision/32 + (newPrecision % 32 != 0);
-    uint32_t fractionDigits = getFractionDigits();
-    precision = newPrecision;
-    if (newFractionDigits == fractionDigits) {
-        return;
-    }
-    int diff = newFractionDigits - fractionDigits;
-    if (diff > 0) {
-        digits.insert(digits.begin(), diff,0);
-    }
-    else{
-        digits.erase(digits.begin(), digits.begin() - diff);
-    }
-}
-
-
-uint32_t LongNum::getPrecision() const {
-    return precision;
-}
-
-LongNum LongNum::withPrecision(uint32_t precision) {
-    LongNum result(*this);
-    result.setPrecision(precision);
-    return result;
-}
 
 std::strong_ordering LongNum::operator<=>(const LongNum &other) const {
     if (isNegative != other.isNegative) {
@@ -433,47 +478,6 @@ LongNum operator""_longnum(unsigned long long  number) {
     return LongNum(number);
 }
 
-LongNum operator<<(const LongNum &number, unsigned shift) {
-    LongNum result(number);
-    uint32_t newDigits = shift / 32;
-    if (newDigits) {
-        result.digits.insert(result.digits.begin(), newDigits, 0);
-    }
-    shift = shift % 32;
-    if (shift) {
-        uint32_t carry = 0;
-        for (size_t i = newDigits; i < result.digits.size(); i++) {
-            uint32_t newCarry = result.digits[i] >> (32 - shift);
-            result.digits[i] <<= shift;
-            result.digits[i] |= carry;
-            carry = newCarry;
-        }
-        if (carry) {
-            result.digits.push_back(carry);
-        }
-    }
-    return result;
 
-}
 
-LongNum operator>>(const LongNum &number, unsigned shift) {
-    LongNum result(number);
-    uint32_t numDigits = shift / 32;
-    if (numDigits >= result.digits.size()) {
-        return (0.0_longnum).withPrecision(number.precision);
-    }
-    result.digits.erase(result.digits.begin(), result.digits.begin() + numDigits);
-    shift = shift % 32;
-    if (shift) {
-        uint32_t carry = 0;
-        for (int i = result.digits.size() - 1; i >= 0; i--) {
-            uint32_t newCarry =  result.digits[i] << (32 - shift);
-            result.digits[i] >>= shift;
-            result.digits[i] |= carry;
-            carry = newCarry;
-        }
-    }
-    result.removeLeadingZeros();
-    return result;
-}
 
