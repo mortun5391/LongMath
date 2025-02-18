@@ -63,10 +63,6 @@ LongNum::LongNum(long double number, uint32_t precision) : precision(precision),
         digits.push_back(0);
     }
 }
-LongNum::LongNum(const LongNum& other) :
-    digits(other.digits), precision(other.precision), isNegative(other.isNegative) {}
-
-LongNum::~LongNum() {}
 
 // Private methods
 

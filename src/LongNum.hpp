@@ -23,8 +23,8 @@ public:
     LongNum(unsigned long long x);
     LongNum(long long x);
     LongNum(long double number, uint32_t precision = 64);
-    LongNum(const LongNum& other);
-    ~LongNum();
+    LongNum(const LongNum& other) = default;
+    ~LongNum() = default;
 
     
     LongNum& operator=(const LongNum& other);
@@ -42,7 +42,7 @@ public:
  
     friend LongNum operator+(const LongNum& lnum,const LongNum& rnum);
     friend LongNum operator-(const LongNum& lnum,const LongNum& rnum);
-    friend LongNum operator*(const Lon  1`gNum& lnum,const LongNum& rnum);
+    friend LongNum operator*(const LongNum& lnum,const LongNum& rnum);
     friend LongNum operator/(const LongNum& lnum,const LongNum& rnum) ;
  
  
