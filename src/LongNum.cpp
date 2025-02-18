@@ -364,7 +364,7 @@ LongNum operator/(const LongNum& lnum,const LongNum& rnum) {
 
         // https://skanthak.hier-im-netz.de/division.html
 
-        const size_t m = l_copy.digits.size(), n = r_copy.digits.size();  // initial sizes
+        const size_t m = l_copy.digits.size(), n = r_copy.digits.size(); 
         const unsigned s = std::countl_zero(r_copy.digits.back());
 
         l_copy <<= s;
@@ -402,7 +402,7 @@ LongNum operator/(const LongNum& lnum,const LongNum& rnum) {
             u[j + n] = t;
 
             q[j] = qhat;
-            if (t < 0) {  // if we subtracted too much, add back
+            if (t < 0) {  
                 q[j]--;
                 carry = 0;
                 for (size_t i = 0; i < n; i++) {
