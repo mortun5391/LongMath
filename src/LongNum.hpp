@@ -19,7 +19,7 @@ private:
     inline void removeLeadingZeros(void);
 
 public:
-    LongNum(uint32_t precision = 64);
+    LongNum(uint32_t precision = 65);
     LongNum(unsigned long long x);
     LongNum(long long x);
     LongNum(long double number, uint32_t precision = 64);
