@@ -15,28 +15,7 @@ constexpr unsigned DEFAULT_PRECISION = 64;
 LongNum::LongNum(uint32_t precision) :  precision(precision) {
     initializeFraction();
 }
-//
-// LongNum::LongNum(unsigned long long number) {
-//     if (number == 0) {
-//         return;
-//     }
-//     while (number) {
-//         digits.push_back(static_cast<uint32_t>(number % (1ULL << BASE)));
-//         number >>= BASE;
-//     }
-// }
-//
-// LongNum::LongNum(long long number) {
-//     if (number == 0) {
-//         return;
-//     }
-//     isNegative = number < 0;
-//     number = std::abs(number);
-//     while (number) {
-//         digits.push_back(static_cast<uint32_t>(number % (1ULL << BASE)));
-//         number >>= BASE;
-//     }
-// }
+
 
 LongNum::LongNum(long double number, uint32_t precision) : precision(precision), isNegative(number < 0){
     number = number < 0 ? -number : number;
@@ -104,19 +83,43 @@ LongNum LongNum::abs(void) const {
 	return result;
 }
 
-std::string LongNum::toString(unsigned decimal_precision) const {
-    const LongNum base = 10.0_longnum;
+LongNum LongNum::pow(uint32_t power) const {
+    LongNum res = 1._longnum, a = *this;
+    while (power) {
+        if (power & 1)
+            res *= a;
+        a *= a;
+        power >>= 1;
+    }
+    return res;
+}
+
+LongNum LongNum::sqrt() const {
+    if (*this < 0._longnum) {
+        throw std::invalid_argument("Number is negative");
+    }
+    LongNum num1 = 0._longnum, num2 = 1._longnum;
+    while (num1 != num2) {
+        num1 = num2;
+        num2 += *this / num2;
+        num2 >>= 1;
+    }
+    return num2;
+}
+
+std::string LongNum::toString(uint32_t decimalPrecision) const {
+    const LongNum base = LongNum(10.0L, 0);
     std::string res;
-    LongNum whole = (*this).withPrecision(0);
-    while (whole != 0.0_longnum) {
-        LongNum q = whole / base;
-        LongNum r = whole - q * base;
-        if (r == 0.0_longnum) {
+    LongNum intPart = (*this).withPrecision(0).abs();
+    while (intPart != (0.0_longnum).withPrecision(0)) {
+        LongNum q = intPart / base;
+        LongNum r = intPart - q * base;
+        if (r == (0.0_longnum).withPrecision(0)) {
             res += '0';
         } else {
             res += std::to_string(r.digits.front());
         }
-        whole = q;
+        intPart = q;
     }
     if (res.empty()) {
         res += '0';
@@ -125,19 +128,19 @@ std::string LongNum::toString(unsigned decimal_precision) const {
         res += '-';
     }
     std::ranges::reverse(res);
-    if (decimal_precision == 0) {
+    if (decimalPrecision == 0) {
         return res;
     }
-    LongNum frac = (*this) - (*this).withPrecision(0);
-    if (frac == 0.0_longnum) {
+    LongNum fracPart = (*this) - (*this).withPrecision(0);
+    if (fracPart == 0.0_longnum) {
         return res;
     }
     res += '.';
     unsigned cnt = 0;
-    while (frac != 0.0_longnum && cnt++ < decimal_precision) {
-        frac *= base;
-        LongNum r = frac.withPrecision(0);
-        frac -= r;
+    while (fracPart != 0.0_longnum && cnt++ < decimalPrecision) {
+        fracPart *= base;
+        LongNum r = fracPart.withPrecision(0);
+        fracPart -= r;
         if (r == 0.0_longnum) {
             res += '0';
         } else {
@@ -260,6 +263,18 @@ LongNum operator>>(const LongNum &number, unsigned shift) {
     return result;
 }
 
+LongNum LongNum::operator+() const {
+    return *this;
+}
+
+LongNum LongNum::operator-() const {
+    LongNum res(*this);
+    if (*this != 0._longnum) {  // -0 == +0
+        res.isNegative ^= 1;
+    }
+    return res;
+}
+
 LongNum operator+(const LongNum& lnum,const LongNum& rnum) {
     if (lnum.isNegative != rnum.isNegative) {
         LongNum temp = lnum.isNegative ? lnum : rnum;
@@ -301,7 +316,7 @@ LongNum operator-(const LongNum &lnum,const LongNum &rnum) {
     if (lnum.isNegative != rnum.isNegative) {
         LongNum temp = lnum.isNegative ? rnum : lnum;
         temp.isNegative = !temp.isNegative;
-        return lnum.isNegative ? lnum + temp : rnum + temp;
+        return -(lnum.isNegative ? lnum + temp : rnum + temp);
     }
 
     uint32_t maxPrecision = std::max(lnum.precision, rnum.precision);
@@ -350,6 +365,7 @@ LongNum operator-(const LongNum &lnum,const LongNum &rnum) {
         result.digits[i] = greaterDigit;
     }
     result.removeLeadingZeros();
+    result.isNegative = ordering == std::strong_ordering::greater ? false : true;
     return result;
 }
 
@@ -468,7 +484,7 @@ LongNum operator/(const LongNum& lnum,const LongNum& rnum) {
 }
 
 
-bool LongNum::operator==(const LongNum &other) const {
+bool LongNum::operator==(const LongNum &other) const{
     return (*this <=> other) == std::strong_ordering::equal;
 }
 
@@ -515,9 +531,6 @@ std::strong_ordering LongNum::operator<=>(const LongNum &other) const {
 LongNum operator""_longnum(const long double number) {
     return LongNum(number, 64);
 }
-// LongNum operator""_longnum(unsigned long long  number) {
-//     return LongNum(number);
-// }
 
 
 

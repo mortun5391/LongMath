@@ -20,8 +20,7 @@ private:
 
 public:
     LongNum(uint32_t precision = 64);
- //   LongNum(unsigned long long x);
- //   LongNum(long long x);
+    LongNum(unsigned long long x);
     LongNum(long double number, uint32_t precision = 64);
     LongNum(const LongNum& other) = default;
     ~LongNum() = default;
@@ -34,6 +33,9 @@ public:
 
     LongNum& operator>>=(uint32_t shift);
     friend LongNum operator>>(const LongNum& number, unsigned shift);
+
+    LongNum operator+() const;
+    LongNum operator-() const;
 
     LongNum& operator+=(const LongNum& other);
     LongNum& operator-=(const LongNum& other);
@@ -49,7 +51,7 @@ public:
     std::strong_ordering operator<=>(const LongNum &other) const;
     std::strong_ordering absCompare(const LongNum &other) const;
 
-    bool operator==(const LongNum& other) const;
+    bool operator==(const LongNum &other) const;
     bool operator!=(const LongNum& other) const;
     bool operator<(const LongNum& other) const;
     bool operator>(const LongNum& other) const;
@@ -60,13 +62,14 @@ public:
     uint32_t getPrecision() const;
     LongNum withPrecision(uint32_t precision) const;
 
-    LongNum frac() const;
-    std::string toString(unsigned decimal_precision = UINT_MAX) const;
+    std::string toString(unsigned decimalPrecision = UINT32_MAX) const;
     LongNum abs(void) const;
+    LongNum pow(uint32_t power) const;
+    LongNum sqrt(void) const;
+
     void printDigits(void);
     void printBinaryDigits(void);
 
  };
  LongNum operator""_longnum(long double number);
- LongNum operator""_longnum(unsigned long long number);
 #endif
