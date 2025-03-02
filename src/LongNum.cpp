@@ -12,10 +12,29 @@ constexpr unsigned DEFAULT_PRECISION = 64;
 
 // ****** Constructors and destructors ******
 
-LongNum::LongNum(uint32_t precision) :  precision(precision) {
-    initializeFraction();
+LongNum::LongNum(long long number) : precision(0), isNegative(number < 0){
+    if (number == 0) {
+        return;
+    }
+    number = std::abs(number);
+    while (number) {
+        digits.push_back(number & UINT32_MAX);
+        number >>= BASE;
+    }
 }
 
+LongNum::LongNum(unsigned long long number) : precision(0){
+    if (number == 0) {
+        return;
+    }
+    while (number) {
+        digits.push_back(number & UINT32_MAX);
+        number >>= BASE;
+    }
+}
+
+LongNum::LongNum(long double number) : LongNum(number, DEFAULT_PRECISION) {
+}
 
 LongNum::LongNum(long double number, uint32_t precision) : precision(precision), isNegative(number < 0){
     number = number < 0 ? -number : number;
@@ -84,7 +103,7 @@ LongNum LongNum::abs(void) const {
 }
 
 LongNum LongNum::pow(uint32_t power) const {
-    LongNum res = 1._longnum, a = *this;
+    LongNum res = 1, a = *this;
     while (power) {
         if (power & 1)
             res *= a;
@@ -95,10 +114,10 @@ LongNum LongNum::pow(uint32_t power) const {
 }
 
 LongNum LongNum::sqrt() const {
-    if (*this < 0._longnum) {
+    if (*this < 0) {
         throw std::invalid_argument("Number is negative");
     }
-    LongNum num1 = 0._longnum, num2 = 1._longnum;
+    LongNum num1 = 0, num2 = 1;
     while (num1 != num2) {
         num1 = num2;
         num2 += *this / num2;
@@ -108,13 +127,13 @@ LongNum LongNum::sqrt() const {
 }
 
 std::string LongNum::toString(uint32_t decimalPrecision) const {
-    const LongNum base = LongNum(10.0L, 0);
+    const LongNum base = 10;
     std::string res;
     LongNum intPart = (*this).withPrecision(0).abs();
-    while (intPart != (0.0_longnum).withPrecision(0)) {
+    while (intPart != 0) {
         LongNum q = intPart / base;
-        LongNum r = intPart - q * base;
-        if (r == (0.0_longnum).withPrecision(0)) {
+        LongNum r = intPart - (q * base);
+        if (r == 0) {
             res += '0';
         } else {
             res += std::to_string(r.digits.front());
@@ -131,21 +150,21 @@ std::string LongNum::toString(uint32_t decimalPrecision) const {
     if (decimalPrecision == 0) {
         return res;
     }
-    LongNum fracPart = (*this) - (*this).withPrecision(0);
-    if (fracPart == 0.0_longnum) {
+    LongNum fracPart = ((*this) - (*this).withPrecision(0)).abs();
+    if (fracPart == 0) {
         return res;
     }
     res += '.';
     unsigned cnt = 0;
-    while (fracPart != 0.0_longnum && cnt++ < decimalPrecision) {
+    while (fracPart != 0 && cnt++ < decimalPrecision) {
         fracPart *= base;
         LongNum r = fracPart.withPrecision(0);
-        fracPart -= r;
-        if (r == 0.0_longnum) {
+        if (r == 0) {
             res += '0';
         } else {
             res += std::to_string(r.digits.front());
         }
+        fracPart -= r;
     }
     return res;
 }
@@ -160,6 +179,7 @@ void LongNum::setPrecision(uint32_t newPrecision) {
         return;
     }
     int diff = newFractionDigits - fractionDigits;
+    
     if (diff > 0) {
         digits.insert(digits.begin(), diff,0);
     }
@@ -269,7 +289,7 @@ LongNum LongNum::operator+() const {
 
 LongNum LongNum::operator-() const {
     LongNum res(*this);
-    if (*this != 0._longnum) {  // -0 == +0
+    if (*this != 0) {  // -0 == +0
         res.isNegative ^= 1;
     }
     return res;
@@ -277,14 +297,12 @@ LongNum LongNum::operator-() const {
 
 LongNum operator+(const LongNum& lnum,const LongNum& rnum) {
     if (lnum.isNegative != rnum.isNegative) {
-        LongNum temp = lnum.isNegative ? lnum : rnum;
-        temp.isNegative = !temp.isNegative;
-        return lnum.isNegative ? rnum - temp : lnum - temp;
+        return lnum.isNegative ? rnum - (-lnum) : lnum - (-rnum);
     }
     uint32_t maxPrecision = std::max(lnum.precision, rnum.precision);
     int l_fractionDigits = lnum.getFractionDigits();
     int r_fractionDigits = rnum.getFractionDigits();
-    LongNum result(maxPrecision);
+    LongNum result(0.0,maxPrecision);
     int maxFractionDigits = std::max(l_fractionDigits, r_fractionDigits);
     int maxSize = std::max(lnum.digits.size() - l_fractionDigits, rnum.digits.size() - r_fractionDigits) + maxFractionDigits;
     while (result.digits.size() < maxSize) {
@@ -313,14 +331,12 @@ LongNum operator+(const LongNum& lnum,const LongNum& rnum) {
 }
 
 LongNum operator-(const LongNum &lnum,const LongNum &rnum) {
-    if (lnum.isNegative != rnum.isNegative) {
-        LongNum temp = lnum.isNegative ? rnum : lnum;
-        temp.isNegative = !temp.isNegative;
-        return -(lnum.isNegative ? lnum + temp : rnum + temp);
+    if (lnum.isNegative || rnum.isNegative) {
+        if (lnum.isNegative == rnum.isNegative) return (-rnum) - (-lnum);
+        return (-rnum) + lnum;
     }
-
     uint32_t maxPrecision = std::max(lnum.precision, rnum.precision);
-    LongNum result(maxPrecision);
+    LongNum result(0L,maxPrecision);
     int l_fractionDigits = lnum.getFractionDigits();
     int r_fractionDigits = rnum.getFractionDigits();
     int maxFractionDigits = std::max(l_fractionDigits, r_fractionDigits);
@@ -370,12 +386,12 @@ LongNum operator-(const LongNum &lnum,const LongNum &rnum) {
 }
 
 LongNum operator*(const LongNum& lnum,const LongNum& rnum) {
-    if (lnum == 0.0_longnum || rnum == 0.0_longnum) {
-        LongNum result(0,std::max(lnum.precision, rnum.precision));
+    if (lnum == 0 || rnum == 0) {
+        LongNum result(0.0,std::max(lnum.precision, rnum.precision));
         return result;
     }
 
-    LongNum result(static_cast<uint32_t>(lnum.precision + rnum.precision));
+    LongNum result(0.0,static_cast<uint32_t>(lnum.precision + rnum.precision));
     result.digits.resize(lnum.digits.size() + rnum.digits.size());
     for (size_t i = 0; i < lnum.digits.size(); i++) {
         uint32_t carry = 0;
@@ -397,92 +413,44 @@ LongNum operator*(const LongNum& lnum,const LongNum& rnum) {
 }
 
 LongNum operator/(const LongNum& lnum,const LongNum& rnum) {
-    if (rnum == 0.0_longnum) {
+    if (rnum == 0) {
         throw std::invalid_argument("Division by zero");
     }
-    if (lnum == 0.0_longnum) {
-        return (0.0_longnum).withPrecision(std::max(lnum.precision, rnum.precision));
+    if (lnum == 0) {
+        return (0_longnum).withPrecision(std::max(lnum.precision, rnum.precision));
     }
-    LongNum l_copy(lnum);
-    LongNum r_copy(rnum);
+    uint32_t maxPrecision = std::max(lnum.precision, rnum.precision);
+	uint32_t normPrecision = std::max(maxPrecision, 96U);
 
-    if (lnum.precision < rnum.precision) {
-        l_copy <<= 2 *rnum.precision - lnum.precision;
-    } else {
-        l_copy <<= rnum.precision;
-    }
-    if (l_copy.digits.size() < r_copy.digits.size() ||
-        (l_copy.digits.size() == r_copy.digits.size() && l_copy.digits.back() < r_copy.digits.back())) {
-        return (0.0_longnum).withPrecision(std::max(l_copy.precision, r_copy.precision));
-        }
-    LongNum result(static_cast<uint32_t>(std::max(lnum.precision, rnum.precision)));
-    if (r_copy.digits.size() == 1) {
-        result = l_copy;
-        uint32_t carry = 0;
-        for (int i = result.digits.size() - 1; i >= 0; i--) {
-            const uint64_t cur = result.digits[i] + (static_cast<uint64_t>(carry) << BASE);
-            result.digits[i] = cur / rnum.digits.front();
-            carry = cur - result.digits[i] * rnum.digits.front();
-        }
-    } else {
+	LongNum l_copy = lnum.abs().withPrecision(normPrecision);
 
-        // https://skanthak.hier-im-netz.de/division.html
+	LongNum r_copy = rnum.abs().withPrecision(normPrecision);
 
-        const size_t m = l_copy.digits.size(), n = r_copy.digits.size();
-        const unsigned s = std::countl_zero(r_copy.digits.back());
-        l_copy <<= s;
-        r_copy <<= s;
-        std::vector<uint32_t>& u = l_copy.digits;
-        if (u.size() == m) {
-            u.push_back(0);
-        }
-        const std::vector<uint32_t>& v = r_copy.digits;
-        result.digits.resize(m - n + 1);
-        std::vector<uint32_t>& q = result.digits;
-        for (int j = m - n; j >= 0; j--) {
-            uint64_t qhat = ((static_cast<uint64_t>(u[j + n]) << BASE) | u[j + n - 1]) / v[n - 1];
-            uint64_t rhat = ((static_cast<uint64_t>(u[j + n]) << BASE) | u[j + n - 1]) % v[n - 1];
-            while (rhat < (1ULL << BASE)) {
-                if (qhat >= (1ULL << BASE) ||  static_cast<uint32_t>(qhat)*static_cast<uint64_t>(v[n - 2])  > ((rhat << BASE) | u[j + n - 2])) {
-                    qhat--;
-                    rhat += v[n - 1];
-                    if (rhat >= (1ULL << BASE)) {
-                        break;
-                    }
-                } else {
-                    break;
-                }
+	l_copy <<= l_copy.getFractionDigits() * 32;
+
+	LongNum result(0.0L, normPrecision);
+	result.isNegative = lnum.isNegative ^ rnum.isNegative;
+	LongNum rem(0.0L, normPrecision);
+
+	// Bitwise division
+	for (int i = l_copy.digits.size() * 32 - 1; i >= 0; --i) {
+		rem <<= 1;
+        uint32_t digitIndex = i / 32;
+	    uint32_t bitIndex = i % 32;
+	    bool bit = (l_copy.digits[digitIndex] >> bitIndex) & 1;
+		rem.digits[0] |= (bit ? 1 : 0);
+		if (rem >= r_copy) {
+			rem -= r_copy;
+	        if (digitIndex >= result.digits.size()) {
+		        result.digits.resize(digitIndex + 1, 0);
             }
-            int64_t t;
-            uint64_t carry = 0;
-            for (size_t i = 0; i < n; i++) {
-                const uint64_t prod =static_cast<uint32_t>(qhat)*static_cast<uint64_t>(v[i]);
-                t = static_cast<int64_t>(u[i + j] - carry - (prod & UINT32_MAX));
-                u[i + j] = t;
-                carry = (prod >> BASE) - (t >> BASE);
-            }
-            t = static_cast<int64_t>(u[j + n] - carry);
-            u[j + n] = t;
-
-            q[j] = qhat;
-            if (t < 0) {
-                q[j]--;
-                carry = 0;
-                for (size_t i = 0; i < n; i++) {
-                    t = static_cast<int64_t>(u[i + j] + v[i] + carry);
-                    u[i + j] = t;
-                    carry = t >> BASE;
-                }
-                u[j + n] += carry;
-            }
-        }
-    }
-    result.setPrecision(std::max(lnum.precision, rnum.precision));
-    result.isNegative = lnum.isNegative ^ rnum.isNegative;
-    result.removeLeadingZeros();
-    return result;
+	        result.digits[digitIndex] |= (1U << bitIndex);
+	    }
+		}
+        result.setPrecision(maxPrecision);
+	    result.removeLeadingZeros();  
+	    return result;
 }
-
 
 bool LongNum::operator==(const LongNum &other) const{
     return (*this <=> other) == std::strong_ordering::equal;
@@ -509,12 +477,16 @@ std::strong_ordering LongNum::absCompare(const LongNum &other) const {
     for (int i = maxSize - 1; i >= 0; i--) {
         if (i < maxSize - digits.size()) {
             if (other.digits[i] != 0) return std::strong_ordering::less;
+            continue;
         }
         if (i < maxSize - other.digits.size()) {
             if (digits[i] != 0) return std::strong_ordering::greater;
+            continue;
         }
-        if (digits[i] != other.digits[i]) {
-            return digits[i] > other.digits[i] ? std::strong_ordering::greater : std::strong_ordering::less;
+        uint32_t ldigit = digits[i - (maxSize - digits.size())];
+        uint32_t rdigit = other.digits[i - (maxSize - other.digits.size())];
+        if (ldigit != rdigit) {
+            return ldigit >  rdigit ? std::strong_ordering::greater : std::strong_ordering::less;
         }
     }
     return std::strong_ordering::equal;
@@ -530,6 +502,10 @@ std::strong_ordering LongNum::operator<=>(const LongNum &other) const {
 
 LongNum operator""_longnum(const long double number) {
     return LongNum(number, 64);
+}
+
+LongNum operator""_longnum(const unsigned long long number) {
+    return LongNum(number);
 }
 
 

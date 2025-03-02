@@ -1,24 +1,24 @@
 CC = g++
-CFLAGS = -Wall -Wextra -pedantic -std=c++23 -pthread
+CFLAGS = -O3 -Wall -Wextra -pedantic -std=c++23 -pthread
 GTFLAGS = -lgtest -lgtest_main -lpthread
-PATH_TO_GTEST = /usr/lib # Убедитесь, что путь правильный
+PATH_TO_GTEST = /usr/lib 
 
 # Директории
 SRC_DIR = src
 BUILD_DIR = build
 
 # Цели
-all: $(BUILD_DIR) $(BUILD_DIR)/tests $(BUILD_DIR)/calculate-pi
+all: $(BUILD_DIR) $(BUILD_DIR)/tests $(BUILD_DIR)/calculate-pi 
 
 
 $(BUILD_DIR):
 	@mkdir -p $(BUILD_DIR)
 
-run_tests: $(BUILD_DIR)/tests
+test: $(BUILD_DIR)/tests
 	@printf "Running tests...\n"
 	@./$(BUILD_DIR)/tests
 
-run_pi: $(BUILD_DIR)/calculate-pi
+pi: $(BUILD_DIR)/calculate-pi
 	@printf "Running calculate-pi...\n"
 	@./$(BUILD_DIR)/calculate-pi $(PRECISION)
 
@@ -49,4 +49,4 @@ clean:
 	@rm -rf $(BUILD_DIR)
 	@printf "Cleaning successful\n"
 
-.PHONY: all run_tests run_pi clean 
+.PHONY: all test pi clean 

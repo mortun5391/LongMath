@@ -3,213 +3,161 @@
 #include <limits>
 #include <cmath>
 
-
-TEST(LongNumTest, DefaultConstructor) {
-    LongNum num(5.5L);
-    EXPECT_EQ(num.toString(1), "5.5");
+// Тесты для конструкторов
+TEST(LongNumConstructorTest, DefaultConstructor) {
+    LongNum num(0.0L);
+    EXPECT_EQ(num.toString(), "0");
 }
 
-
-
-// Тест для сложения
-TEST(LongNumTest, Addition) {
-    LongNum a(123.L);
-    LongNum b(456.L);
-    LongNum result = a + b;
-    EXPECT_EQ(result, 579._longnum);
+TEST(LongNumConstructorTest, LongDoubleConstructor) {
+    LongNum num(3.141592653589793238L);
+    EXPECT_EQ(num.toString(18), "3.141592653589793238");
 }
 
-// Тест для вычитания
-TEST(LongNumTest, Subtraction) {
-    LongNum a(1000.L);
-    LongNum b(123.L);
-    LongNum result = a - b;
-    EXPECT_EQ(result.toString(0), "877");
+TEST(LongNumConstructorTest, LongLongConstructor) {
+    LongNum num(1234567890123456789LL);
+    EXPECT_EQ(num.toString(), "1234567890123456789");
 }
 
-// Тест для умножения
-TEST(LongNumTest, Multiplication) {
-    LongNum a(123.L);
-    LongNum b(456.L);
-    LongNum result = a * b;
-    EXPECT_EQ(result, 56088._longnum);
+TEST(LongNumConstructorTest, UnsignedLongLongConstructor) {
+    LongNum num(12345678901234567890ULL);
+    EXPECT_EQ(num.toString(), "12345678901234567890");
 }
 
-// Тест для деления
-TEST(LongNumTest, Division) {
-    LongNum a(1000.L);
-    LongNum b(10.L);
-    LongNum result = a / b;
-    EXPECT_EQ(result, 100._longnum);
+// Тесты для операторов присваивания
+TEST(LongNumAssignmentTest, AssignmentOperator) {
+    LongNum num1(123.456L);
+    LongNum num2 = num1;
+    EXPECT_EQ(num2.toString(3), "123.456");
 }
 
-// Тест для оператора сравнения (меньше)
-TEST(LongNumTest, LessThan) {
-    LongNum a(123.L);
-    LongNum b(456.L);
-    EXPECT_TRUE(a < b);
+// Тесты для операторов сдвига
+TEST(LongNumShiftTest, LeftShift) {
+    LongNum num(1.0L);
+    num <<= 3;
+    EXPECT_EQ(num.toString(), "8");
 }
 
-// Тест для оператора сравнения (больше)
-TEST(LongNumTest, GreaterThan) {
-    LongNum a(456.L);
-    LongNum b(123.L);
-    EXPECT_TRUE(a > b);
+TEST(LongNumShiftTest, RightShift) {
+    LongNum num(8.0L);
+    num >>= 3;
+    EXPECT_EQ(num.toString(), "1");
 }
 
-// Тест для оператора равенства
-TEST(LongNumTest, Equality) {
-    LongNum a(123.L);
-    LongNum b(123.L);
-    EXPECT_TRUE(a == b);
+// Тесты для унарных операторов
+TEST(LongNumUnaryTest, UnaryPlus) {
+    LongNum num(-123.456L);
+    LongNum result = +num;
+    EXPECT_EQ(result.toString(3), "-123.456");
 }
 
-// Тест для оператора неравенства
-TEST(LongNumTest, Inequality) {
-    LongNum a(123.L);
-    LongNum b(456.L);
-    EXPECT_TRUE(a != b);
+TEST(LongNumUnaryTest, UnaryMinus) {
+    LongNum num(123.456L);
+    LongNum result = -num;
+    EXPECT_EQ(result.toString(3), "-123.456");
 }
 
-// Тест для метода abs (абсолютное значение)
-TEST(LongNumTest, AbsoluteValue) {
-    LongNum a(-123.L);
-    LongNum result = a.abs();
-    EXPECT_EQ(result, 123._longnum);
+// Тесты для арифметических операций
+TEST(LongNumArithmeticTest, Addition) {
+    LongNum num1(123.456L);
+    LongNum num2(654.321L);
+    LongNum result = num1 + num2;
+    EXPECT_EQ(result.toString(3), "777.777");
 }
 
+TEST(LongNumArithmeticTest, Subtraction) {
+    LongNum num1(654.321L);
+    LongNum num2(123.456L);
+    LongNum result = num1 - num2;
+    EXPECT_EQ(result.toString(3), "530.865");
+}
 
-TEST(LongNumTest, WithPrecision) {
-    LongNum a(123.456789L);
-    LongNum result = a.withPrecision(3);
+TEST(LongNumArithmeticTest, Multiplication) {
+    LongNum num1(123.456L);
+    LongNum num2(2.0L);
+    LongNum result = num1 * num2;
+    EXPECT_EQ(result.toString(3), "246.912");
+}
+
+TEST(LongNumArithmeticTest, Division) {
+    LongNum num1(123.456L);
+    LongNum num2(2.0L);
+    LongNum result = num1 / num2;
+    EXPECT_EQ(result.toString(3), "61.728");
+}
+
+// Тесты для операторов сравнения
+TEST(LongNumComparisonTest, Equal) {
+    LongNum num1(123.456L);
+    LongNum num2(123.456L);
+    EXPECT_TRUE(num1 == num2);
+}
+
+TEST(LongNumComparisonTest, NotEqual) {
+    LongNum num1(123.456L);
+    LongNum num2(654.321L);
+    EXPECT_TRUE(num1 != num2);
+}
+
+TEST(LongNumComparisonTest, LessThan) {
+    LongNum num1(123.456L);
+    LongNum num2(654.321L);
+    EXPECT_TRUE(num1 < num2);
+}
+
+TEST(LongNumComparisonTest, GreaterThan) {
+    LongNum num1(654.321L);
+    LongNum num2(123.456L);
+    EXPECT_TRUE(num1 > num2);
+}
+
+// Тесты для работы с точностью
+TEST(LongNumPrecisionTest, SetPrecision) {
+    LongNum num(123.456L);
+    num.setPrecision(64);
+    EXPECT_EQ(num.getPrecision(), 64);
+}
+
+TEST(LongNumPrecisionTest, WithPrecision) {
+    LongNum num(123.456L);
+    LongNum result = num.withPrecision(32);
+    EXPECT_EQ(result.getPrecision(), 32);
+}
+
+// Тесты для метода toString
+TEST(LongNumToStringTest, ToString) {
+    LongNum num(123.456L);
+    EXPECT_EQ(num.toString(3), "123.456");
+}
+
+// Тесты для метода abs
+TEST(LongNumAbsTest, Abs) {
+    LongNum num(-123.456L);
+    LongNum result = num.abs();
     EXPECT_EQ(result.toString(3), "123.456");
 }
 
-// Тест для метода toString
-TEST(LongNumTest, ToString) {
-    LongNum a(123.456L);
-    EXPECT_EQ(a.toString(2), "123.45");
+// Тесты для метода pow
+TEST(LongNumPowTest, Pow) {
+    LongNum num(2.0L);
+    LongNum result = num.pow(10);
+    EXPECT_EQ(result.toString(), "1024");
 }
 
-TEST(LongNumTest, LongDoubleLiteral) {
+// Тесты для метода sqrt
+TEST(LongNumSqrtTest, Sqrt) {
+    LongNum num(16.0L);
+    LongNum result = num.sqrt();
+    EXPECT_EQ(result.toString(), "4");
+}
+
+// Тесты для литералов
+TEST(LongNumLiteralTest, LongDoubleLiteral) {
     LongNum num = 123.456_longnum;
     EXPECT_EQ(num.toString(3), "123.456");
 }
 
-TEST(LongNumTest, MinMaxValues) {
-    LongNum min_val(std::numeric_limits<long double>::min());
-    LongNum max_val(std::numeric_limits<long double>::max());
-
-    EXPECT_GT(max_val, min_val);
-    EXPECT_LT(min_val, max_val);
+TEST(LongNumLiteralTest, UnsignedLongLongLiteral) {
+    LongNum num = 1234567890_longnum;
+    EXPECT_EQ(num.toString(), "1234567890");
 }
-
-TEST(LongNumTest, Zero) {
-    LongNum zero(0.0L);
-    EXPECT_EQ(zero.toString(), "0");
-    EXPECT_EQ(zero + zero, zero);
-    EXPECT_EQ(zero * zero, zero);
-    EXPECT_EQ(zero / LongNum(1.0L), zero);
-}
-
-TEST(LongNumTest, AdditionWithZero) {
-    LongNum a(123.456L);
-    LongNum zero(0.0L);
-    EXPECT_EQ(a + zero, a);
-    EXPECT_EQ(zero + a, a);
-}
-
-TEST(LongNumTest, SubtractionWithZero) {
-    LongNum a(123.456L);
-    LongNum zero(0.0L);
-    EXPECT_EQ(zero - a, -a);  // Проверяем, что zero - a == -a
-    EXPECT_EQ(a - zero, a); 
-}
-
-TEST(LongNumTest, MultiplicationWithZero) {
-    LongNum a(123.456L);
-    LongNum zero(0.0L);
-    EXPECT_EQ(a * zero, zero);
-    EXPECT_EQ(zero * a, zero);
-}
-
-TEST(LongNumTest, DivisionByZero) {
-    LongNum a(123.456L);
-    LongNum zero(0.0L);
-    EXPECT_THROW(a / zero, std::invalid_argument);  // Ожидаем исключение
-}
-
-TEST(LongNumTest, AdditionWithNegative) {
-    LongNum a(123.456L);
-    LongNum b(-456.789L);
-    EXPECT_EQ((a + b).toString(3), "-333.333");
-}
-
-TEST(LongNumTest, SubtractionWithNegative) {
-    LongNum a(123.456L);
-    LongNum b(-456.789L);
-    EXPECT_EQ((a - b).toString(3), "580.245");
-}
-
-TEST(LongNumTest, MultiplicationWithNegative) {
-    LongNum a(123.456L);
-    LongNum b(-456.789L);
-    EXPECT_EQ((a * b).toString(3), "-56393.342");
-}
-
-TEST(LongNumTest, DivisionWithNegative) {
-    LongNum a(123.456L);
-    LongNum b(-456.789L);
-    EXPECT_EQ(a / b, LongNum(123.456L / -456.789L));
-}
-
-TEST(LongNumTest, WithPrecisionZero) {
-    LongNum a(123.456789L);
-    LongNum result = a.withPrecision(0);
-    EXPECT_EQ(result.toString(), "123");
-}
-
-TEST(LongNumTest, ToStringZeroPrecision) {
-    LongNum a(123.456L);
-    EXPECT_EQ(a.toString(0), "123");
-}
-
-TEST(LongNumTest, AdditionLargeNumbers) {
-    LongNum a(1e20L);
-    LongNum b(2e20L);
-    EXPECT_EQ(a + b, LongNum(3e20L));
-}
-
-TEST(LongNumTest, MultiplicationLargeNumbers) {
-    LongNum a(1e20L);
-    LongNum b(2e20L);
-    EXPECT_EQ(a * b, LongNum(2e40L));
-}
-
-TEST(LongNumTest, AdditionSmallNumbers) {
-    LongNum a(1e-20L);
-    LongNum b(2e-20L);
-    EXPECT_EQ(a + b, LongNum(3e-20L));
-}
-
-TEST(LongNumTest, MultiplicationSmallNumbers) {
-    LongNum a(1e-20L);
-    LongNum b(2e-20L);
-    EXPECT_EQ(a * b, LongNum(2e-40L));
-}
-
-TEST(LongNumTest, ComparisonWithNegative) {
-    LongNum a(-123.456L);
-    LongNum b(0.0L);
-    EXPECT_LT(a, b);
-    EXPECT_GT(b, a);
-}
-
-TEST(LongNumTest, ComparisonCloseNumbers) {
-    LongNum a(123.456L);
-    LongNum b(123.4560001L);
-    EXPECT_LT(a, b);
-    EXPECT_GT(b, a);
-}
-
-

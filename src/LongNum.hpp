@@ -19,9 +19,10 @@ private:
     inline void removeLeadingZeros(void);
 
 public:
-    LongNum(uint32_t precision = 64);
-    LongNum(unsigned long long x);
-    LongNum(long double number, uint32_t precision = 64);
+    LongNum(long long number);
+    explicit LongNum(long double number);
+    explicit LongNum(unsigned long long x);
+    LongNum(long double number, uint32_t precision);
     LongNum(const LongNum& other) = default;
     ~LongNum() = default;
 
@@ -72,4 +73,5 @@ public:
 
  };
  LongNum operator""_longnum(long double number);
+ LongNum operator""_longnum(unsigned long long number);
 #endif
