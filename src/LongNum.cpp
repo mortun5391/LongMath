@@ -432,7 +432,7 @@ LongNum operator/(const LongNum& lnum,const LongNum& rnum) {
 	result.isNegative = lnum.isNegative ^ rnum.isNegative;
 	LongNum rem(0.0L, normPrecision);
 
-	// Bitwise division
+	
 	for (int i = l_copy.digits.size() * 32 - 1; i >= 0; --i) {
 		rem <<= 1;
         uint32_t digitIndex = i / 32;

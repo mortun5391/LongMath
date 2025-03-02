@@ -46,15 +46,15 @@ Example:
 ```c++
 // 0.125 = 0.001 (binary)
 
-std::cout << (0.125_longnum).with_precision(3) << '\n';
+std::cout << (0.125_longnum).withPrecision(3) << '\n';
 // >>> 0.125
 
-std::cout << (0.125_longnum).with_precision(2) << '\n';  // 0.001 -> 0.00
+std::cout << (0.125_longnum).withPrecision(2) << '\n';  // 0.001 -> 0.00
 // >>> 0
 ```
 
 ### Relational operators
-Relational operators `==`, `!=`, `>`, `>=`, `<`, `<=` are overloaded for the `LongNum` class.
+Relational operators `==`, `!=`, `>`, `<`  are overloaded for the `LongNum` class.
 
 ### Mathematical operators
 Operators `+`, `-`, `*`, `/`, `<<`, `>>` as well as operators `+=`, `-=`, `*=`, `/=` are overloaded for the `LongNum`
