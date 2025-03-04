@@ -1,6 +1,6 @@
 ## Requirements
 
-Requires GCC 14 or newer.
+Requires GCC 14 or newer
 
 
 ## Makefile
